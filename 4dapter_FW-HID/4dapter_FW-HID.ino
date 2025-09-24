@@ -35,6 +35,11 @@ N64_status_packet   N64Data;
 int8_t LeftX = 0;
 int8_t LeftY = 0;
 
+// Rumble support variables
+bool lastRumbleState = false;
+unsigned long rumbleCheckTimer = 0;
+const unsigned long RUMBLE_CHECK_INTERVAL = 100; // Check every 100ms
+
 #define NES       0
 #define SNES      1
 #define GENESIS   2
@@ -227,6 +232,9 @@ void setup()
   PORTB |= B00000100; // high
 
   delay(250);
+  
+  // Initialize rumble pak detection (simple, no startup test for now)
+  n64_controller.checkRumblePak();
 }
 
 void loop() 
@@ -390,6 +398,18 @@ void loop()
       
       Gamepad[2]._GamepadReport.X = LeftX;
       Gamepad[2]._GamepadReport.Y = LeftY;
+      
+      // Simple rumble test: vibrate when Start button is pressed
+      static bool startPressed = false;
+      bool currentStart = (N64Data.data1 & 0x10) != 0; // Start button
+      
+      if (currentStart && !startPressed) {
+        // Start button just pressed - trigger short rumble
+        n64_controller.setRumble(true);
+        delay(100); // Very short rumble
+        n64_controller.setRumble(false);
+      }
+      startPressed = currentStart;
     }    
 
   sendState();

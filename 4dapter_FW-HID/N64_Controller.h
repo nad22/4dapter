@@ -11,6 +11,8 @@
 #ifndef N64Controller_h
 #define N64Controller_h
 
+#include <stdint.h>
+
 #define N64_PIN     10
 #define N64_PIN_DIR DDRB
 
@@ -34,6 +36,15 @@ typedef struct state
     unsigned char data2;
 } N64_status_packet;
 
+// N64 Expansion/Memory Pak commands (raphnet standard)
+#define N64_EXPANSION_READ      0x02
+#define N64_EXPANSION_WRITE     0x03
+#define N64_GET_STATUS          0x01
+
+// Rumble Pak addresses (from raphnet implementation)
+#define RUMBLEPAK_INIT_ADDRESS  0x8001    // Initialization address
+#define RUMBLEPAK_CTRL_ADDRESS  0xC01B    // Control address for rumble on/off
+
 class N64Controller 
 {
   public:  
@@ -45,6 +56,17 @@ class N64Controller
     void print_N64_status();
     void getN64Packet();
     N64_status_packet N64_status;
+    
+    // Rumble Pak support functions  
+    bool checkRumblePak();
+    bool initializeRumblePak();
+    void setRumble(bool enable);
+    bool writeMemoryPak(unsigned short address, unsigned char* data, int length);
+    void sendRumbleCommand(unsigned char* buffer, int length);
+    
+    // Rumble Pak variables
+    bool rumbleEnabled;
+    bool rumblePakDetected;
 
   private:
     char N64_raw_dump[33]; // 1 received bit per byte
